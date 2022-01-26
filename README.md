@@ -1,6 +1,6 @@
 # boris
 
-![](https://github.com/camenergydatalab/boris/workflows/py-test/badge.svg)
+![](https://github.com/hankehly/boris/workflows/py-test/badge.svg)
 
 ## What is boris?
 
