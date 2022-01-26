@@ -1,0 +1,48 @@
+#!/bin/bash
+
+set -eo pipefail
+
+# Package boris so that we can include it in our lambda function image
+poetry build --format wheel
+BORIS_WHEEL=$(find dist -name "boris-*.whl" -exec basename {} ';' | head -n 1 | tr -d '[:space:]')
+
+# Copy all handler functions and templates to a temporary directory
+WORK_DIR=$(mktemp -d)
+cp -r boris/backends/aws/handlers/* "$WORK_DIR"
+
+# Copy the boris wheel package to each function dir
+echo "$WORK_DIR"/{main,dispatch,worker}/ | xargs -n 1 cp -v dist/"${BORIS_WHEEL}"
+
+# Replace the wheel package placeholder text in requirements.txt.template
+# with the actual package filename (eg. boris-0.1.0-py3-none-any.whl)
+sed "s/{{boris_wheel}}/$BORIS_WHEEL/" <"$WORK_DIR"/templates/requirements.txt.template >"$WORK_DIR"/requirements.txt
+echo "$WORK_DIR"/{main,dispatch,worker}/ | xargs -n 1 cp -v "$WORK_DIR"/requirements.txt
+
+# Use SAM cli to build the appropriate container image(s)
+case $BORIS_TEMPLATE_SUFFIX in
+py37)
+  sed "s/{{python_version}}/3.7/" <"$WORK_DIR"/templates/Dockerfile.template >"$WORK_DIR"/Dockerfile37
+  echo "$WORK_DIR"/{main,dispatch,worker}/ | xargs -n 1 cp -v "$WORK_DIR"/Dockerfile37
+  # --parallel flag raises toomanyrequests error
+  sam build --cached --template "$WORK_DIR"/templates/sam-py37.yaml --build-dir .aws-sam/build
+  ;;
+py38)
+  sed "s/{{python_version}}/3.8/" <"$WORK_DIR"/templates/Dockerfile.template >"$WORK_DIR"/Dockerfile38
+  echo "$WORK_DIR"/{main,dispatch,worker}/ | xargs -n 1 cp -v "$WORK_DIR"/Dockerfile38
+  # --parallel flag raises toomanyrequests error
+  sam build --cached --template "$WORK_DIR"/templates/sam-py38.yaml --build-dir .aws-sam/build
+  ;;
+*)
+  sed "s/{{python_version}}/3.7/" <"$WORK_DIR"/templates/Dockerfile.template >"$WORK_DIR"/Dockerfile37
+  sed "s/{{python_version}}/3.8/" <"$WORK_DIR"/templates/Dockerfile.template >"$WORK_DIR"/Dockerfile38
+  echo "$WORK_DIR"/{main,dispatch,worker}/ | xargs -n 1 cp -v "$WORK_DIR"/Dockerfile37
+  echo "$WORK_DIR"/{main,dispatch,worker}/ | xargs -n 1 cp -v "$WORK_DIR"/Dockerfile38
+  # --parallel flag raises toomanyrequests error
+  sam build --cached --template "$WORK_DIR"/templates/sam-all.yaml --build-dir .aws-sam/build
+  ;;
+esac
+
+# Cleanup
+rm -rf "$WORK_DIR"
+rm -f dist/"$BORIS_WHEEL"
+rmdir dist

@@ -1,0 +1,10 @@
+FROM public.ecr.aws/lambda/python:{{python_version}}
+
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV PIP_NO_CACHE_DIR=1
+
+COPY app.py boris-*.whl requirements.txt ${LAMBDA_TASK_ROOT}/
+
+RUN python{{python_version}} -m pip install -r requirements.txt -t .
+
+CMD [ "app.lambda_handler" ]

@@ -1,0 +1,91 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: SAM Template for boris
+Parameters:
+  ContentBucketName:
+    Type: String
+Globals:
+  Function:
+    Timeout: 180
+Resources:
+  ContentBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName:
+        Ref: ContentBucketName
+  BorisMainPy37:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      FunctionName: BorisMainPy37
+      Description: 'boris main function for python 3.7 runtime'
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref BorisDispatchPy37
+    Metadata:
+      DockerContext: ../main
+      Dockerfile: Dockerfile37
+  BorisDispatchPy37:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      FunctionName: BorisDispatchPy37
+      Description: 'boris dispatch function for python 3.7 runtime'
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref BorisWorkerPy37
+    Metadata:
+      DockerContext: ../dispatch
+      Dockerfile: Dockerfile37
+  BorisWorkerPy37:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      FunctionName: BorisWorkerPy37
+      Description: 'boris worker function for python 3.7 runtime'
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref ContentBucketName
+        - S3WritePolicy:
+            BucketName: !Ref ContentBucketName
+    Metadata:
+      DockerContext: ../worker
+      Dockerfile: Dockerfile37
+  BorisMainPy38:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      FunctionName: BorisMainPy38
+      Description: 'boris main function for python 3.8 runtime'
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref BorisDispatchPy38
+    Metadata:
+      DockerContext: ../main
+      Dockerfile: Dockerfile38
+  BorisDispatchPy38:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      FunctionName: BorisDispatchPy38
+      Description: 'boris dispatch function for python 3.8 runtime'
+      Policies:
+        - LambdaInvokePolicy:
+            FunctionName: !Ref BorisWorkerPy38
+    Metadata:
+      DockerContext: ../dispatch
+      Dockerfile: Dockerfile38
+  BorisWorkerPy38:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      FunctionName: BorisWorkerPy38
+      Description: 'boris worker function for python 3.8 runtime'
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref ContentBucketName
+        - S3WritePolicy:
+            BucketName: !Ref ContentBucketName
+    Metadata:
+      DockerContext: ../worker
+      Dockerfile: Dockerfile38

@@ -1,0 +1,37 @@
+#!/bin/bash
+
+valid=1
+
+if [[ -z "$ContentBucketName" ]]; then
+  echo "[Error] Set 'ContentBucketName' to the name of the S3 bucket where boris uploads your job content."
+  valid=0
+fi
+
+if [[ -z "$Region" ]]; then
+  echo "[Error] Set 'Region' to the AWS Region of the service (e.g. us-east-1)."
+  valid=0
+fi
+
+if [[ -z "$DeploymentBucketName" ]]; then
+  echo "[Error] Set 'DeploymentBucketName' to the name of the S3 bucket where boris uploads your CloudFormation template."
+  valid=0
+fi
+
+if [[ -z "$ImageRepository" ]]; then
+  echo "[Error] Set 'ImageRepository' to the the ECR repo uri where we upload the image artifacts referenced in template."
+  valid=0
+fi
+
+if [[ "$valid" == 0 ]]; then
+  echo "Abort."
+  exit 1
+fi
+
+sam deploy --parameter-overrides ContentBucketName="$ContentBucketName" \
+  --template .aws-sam/build/template.yaml \
+  --stack-name boris-handler-stack \
+  --s3-bucket "$DeploymentBucketName" \
+  --s3-prefix boris-handler-stack \
+  --region "$Region" \
+  --capabilities CAPABILITY_IAM \
+  --image-repository "$ImageRepository"

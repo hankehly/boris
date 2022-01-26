@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+.ipynb_checkpoints
+.env
+.idea/
+.hypothesis/
+boris.egg-info/
+pip-wheel-metadata
+.aws-sam/
+.python-version
+dist/
+*.whl
+requirements.txt
+.tox
