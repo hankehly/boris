@@ -7,10 +7,7 @@
 boris is a distributed processing tool that uses "serverless" cloud infrastructure to run programs in parallel.
 Currently AWS is the only supported provider.
 
-boris borrows heavily from [lithops](https://github.com/lithops-cloud/lithops) implementation with some differences:
-
-- boris uses multiple function handlers to distribute work in a tree-like pattern
-- boris uses docker containers as its deployment mechanism
+boris borrows heavily from [lithops](https://github.com/lithops-cloud/lithops) implementation.
 
 ### When should I use boris?
 
